@@ -19,7 +19,7 @@
 <header class="app-head">
   <h1>냐썸네일</h1>
   <button class="pill ghost" id="btn-guide" type="button" aria-pressed="false">피드 가이드</button>
-  <button class="pill ghost" id="btn-reset" type="button">새로 만들기</button>
+  <button class="pill ghost" id="btn-reset" type="button">초기화</button>
 </header>
 
 <main class="workspace">
@@ -159,6 +159,16 @@
   <button data-tab="text">글자</button>
   <button data-tab="save">저장</button>
 </nav>
+
+<div class="out" id="reset-sheet" hidden>
+  <div class="out-card">
+    <p><b>새 작업을 시작할까요?</b></p>
+    <button class="pill primary" type="button" data-reset="all">완전 초기화 (처음 상태로)</button>
+    <button class="pill" type="button" data-reset="keep">스타일 유지하고 비우기</button>
+    <p class="hint">스타일 유지 = 딤 설정과 첫 글자의 색·크기는 남기고 사진·글자만 지움.<br>내 스타일·내 색은 어느 쪽이든 그대로.</p>
+    <button class="pill ghost" type="button" data-reset="cancel">취소</button>
+  </div>
+</div>
 
 <div class="out" id="out" hidden>
   <div class="out-card">

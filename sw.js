@@ -1,5 +1,5 @@
 /* 앱 셸 캐시 — 오프라인 실행용. 글꼴·딤까지 넣어야 비행기 모드에서도 썸네일이 나온다. */
-const CACHE = 'nyathumb-shell-v2';
+const CACHE = 'nyathumb-shell-v3';
 const SHELL = [
   './', './index.html', './style.css', './render.js', './app.js', './manifest.json',
   './assets/dim.png', './fonts/nyjoa-B.ttf', './fonts/nyjoa-R.ttf',

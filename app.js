@@ -440,20 +440,31 @@ cv.addEventListener('wheel', (e) => {
   changed();
 }, { passive: false });
 
-/* ---------- 피드 가이드 · 새로 만들기 ---------- */
+/* ---------- 피드 가이드 · 초기화 ---------- */
 $('#btn-guide').addEventListener('click', (e) => {
   const on = $('#guide').hidden;
   $('#guide').hidden = !on;
   e.currentTarget.setAttribute('aria-pressed', String(on));
 });
-// 딤과 글자 스타일은 남기고 사진·글자 내용만 비운다 (글자는 첫 번째 것만 남김)
-$('#btn-reset').addEventListener('click', () => {
+// 초기화는 두 가지: 완전히 처음 상태로 / 딤·첫 글자 스타일은 남기고 사진·글자 내용만 비우기.
+// 내 스타일·내 색은 어느 쪽이든 지우지 않는다
+$('#btn-reset').addEventListener('click', () => { $('#reset-sheet').hidden = false; });
+$('#reset-sheet').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-reset]');
+  if (!b && e.target !== e.currentTarget) return;
+  $('#reset-sheet').hidden = true;
+  const how = b ? b.dataset.reset : 'cancel';
+  if (how === 'cancel') return;
   assets.bg = null;
-  state.bg = { x: 0, y: 0, z: 1 };
-  const first = state.texts[0];
-  state.texts = first ? [{ ...first, text: '', styles: [] }] : [newLayer('text', { y: H * ANCHOR.bottom })];
-  state.active = 0;
-  ta.value = '';
+  if (how === 'all') {
+    Object.assign(state, fresh());
+  } else {
+    state.bg = { x: 0, y: 0, z: 1 };
+    const first = state.texts[0];
+    state.texts = first ? [{ ...first, text: '', styles: [] }] : [newLayer('text', { y: H * ANCHOR.bottom })];
+    state.active = 0;
+  }
+  ta.value = cur() ? cur().text : '';
   sel = null;
   changed();
   showTab('bg');
