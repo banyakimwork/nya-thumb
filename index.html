@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16171a" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="냐썸네일">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preload" href="fonts/nyjoa-B.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="style.css">
+<title>냐썸네일</title>
+</head>
+<body>
+
+<header class="app-head">
+  <h1>냐썸네일</h1>
+  <button class="pill ghost" id="btn-guide" type="button" aria-pressed="false">피드 가이드</button>
+  <button class="pill ghost" id="btn-reset" type="button">새로 만들기</button>
+</header>
+
+<main class="workspace">
+  <section class="stage" id="stage">
+    <div class="frame" id="frame">
+      <canvas id="cv" width="1080" height="1920"></canvas>
+      <canvas id="ov" width="1080" height="1920" aria-hidden="true"></canvas>
+      <div class="guide" id="guide" hidden><span>피드에서 보이는 3:4</span></div>
+      <div class="loading" id="loading">글꼴 불러오는 중…</div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel">
+
+    <!-- ===== 배경 ===== -->
+    <div class="pane" data-pane="bg">
+      <label class="pill primary file-btn">사진 고르기<input type="file" id="file" accept="image/*" hidden></label>
+      <p class="hint">이 탭에서는 글자 위를 만져도 사진만 움직인다. 한 손가락 = 이동, 두 손가락 벌리기 = 확대. 맥에서는 휠로 확대.</p>
+      <div class="field">
+        <span class="label">확대 <b data-out="bg.z"></b></span>
+        <input type="range" data-bind="bg.z" min="0.3" max="4" step="0.01">
+      </div>
+      <button class="pill" id="btn-fit" type="button">꽉 채우기로 되돌리기</button>
+    </div>
+
+    <!-- ===== 딤 ===== -->
+    <div class="pane" data-pane="dim">
+      <label class="switch"><input type="checkbox" data-bind="dim.on"><span>딤 적용</span></label>
+      <div class="field">
+        <span class="label">위치</span>
+        <div class="seg" data-bind="dim.pos"><button data-v="top">상단</button><button data-v="bottom">하단</button></div>
+      </div>
+      <div class="field">
+        <span class="label">겹수</span>
+        <div class="seg" data-bind="dim.layers" data-num><button data-v="1">1겹</button><button data-v="2">2겹</button></div>
+      </div>
+      <div class="field">
+        <span class="label">진하기 <b data-out="dim.opacity"></b></span>
+        <input type="range" data-bind="dim.opacity" min="0.1" max="1" step="0.05">
+      </div>
+      <div class="field">
+        <span class="label">세로 배율 <b data-out="dim.scaleY"></b></span>
+        <div class="seg" data-bind="dim.scaleY" data-num>
+          <button data-v="1">원본</button><button data-v="1.5">1.5×</button><button data-v="2">2×</button><button data-v="2.5">2.5×</button>
+        </div>
+        <input type="range" data-bind="dim.scaleY" min="0.8" max="3.2" step="0.05">
+      </div>
+      <label class="switch"><input type="checkbox" data-bind="dim.follow"><span>글자 위치 바로가기를 따라가기</span></label>
+      <p class="hint">켜두면 글자를 [상단]으로 보낼 때 딤도 상단, [하단]이면 하단, [중간]이면 딤을 끈다.</p>
+    </div>
+
+    <!-- ===== 글자 (레이어 여러 개) ===== -->
+    <div class="pane" data-pane="text">
+      <div class="layers" id="layers"></div>
+      <div class="row-btns add">
+        <button class="pill" type="button" data-add="text">+ 문구</button>
+        <button class="pill" type="button" data-add="kicker">+ 머리말</button>
+        <button class="pill" type="button" data-add="box">+ 상자 띠</button>
+        <button class="pill" type="button" data-add="tilt">+ 기울인</button>
+      </div>
+      <p class="hint">미리보기에서 글자를 눌러 고른다. 끌면 이동, 두 손가락으로 벌리면 크기, 돌리면 기울기.</p>
+
+      <div id="layer-edit">
+        <textarea id="main-text" rows="2" placeholder="문구 (엔터 한 번 = 두 줄)" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+        <div class="sel-chip" id="sel-chip" hidden>
+          <span>선택: <b id="sel-text"></b> — 색·크기가 이 글자에만 적용</span>
+          <button type="button" id="sel-clear" aria-label="선택 해제">해제</button>
+        </div>
+        <div class="field">
+          <span class="label">색 <small id="color-scope">전체</small></span>
+          <div class="swatches" id="main-swatches"></div>
+        </div>
+        <div class="field">
+          <span class="label">선택 글자 크기</span>
+          <div class="seg" id="sel-scale"><button data-v="1">보통</button><button data-v="1.3">크게</button><button data-v="1.6">더 크게</button></div>
+        </div>
+        <div class="field">
+          <span class="label">위치 바로가기</span>
+          <div class="seg" id="snap"><button data-v="top">상단</button><button data-v="middle">중간</button><button data-v="bottom">하단</button><button data-v="center">가운데</button></div>
+        </div>
+        <div class="field">
+          <span class="label">크기 <b data-out="L.size"></b></span>
+          <div class="seg" data-bind="L.size" data-num><button data-v="95">작게</button><button data-v="125">중간</button></div>
+          <input type="range" data-bind="L.size" min="30" max="300" step="1">
+        </div>
+        <div class="field">
+          <span class="label">외곽선 <b data-out="L.stroke"></b></span>
+          <input type="range" data-bind="L.stroke" min="0" max="14" step="0.5">
+        </div>
+        <div class="field">
+          <span class="label">기울기 <b data-out="L.rot"></b></span>
+          <input type="range" data-bind="L.rot" min="-45" max="45" step="1">
+        </div>
+        <div class="field">
+          <span class="label">굵기</span>
+          <div class="seg" data-bind="L.weight"><button data-v="B">B</button><button data-v="R">R</button></div>
+        </div>
+        <label class="switch"><input type="checkbox" data-bind="L.box"><span>색 상자 띠</span></label>
+        <div class="field" id="box-field">
+          <span class="label">상자 색</span>
+          <div class="swatches" id="box-swatches"></div>
+        </div>
+        <div class="row-btns">
+          <button class="pill" type="button" id="btn-dup">복제</button>
+          <button class="pill" type="button" id="btn-front">맨 앞으로</button>
+          <button class="pill" type="button" id="btn-del">삭제</button>
+        </div>
+      </div>
+      <p class="hint" id="no-layer" hidden>글자가 없다. 위에서 추가하자.</p>
+    </div>
+
+    <!-- ===== 저장 ===== -->
+    <div class="pane" data-pane="save">
+      <button class="pill primary big" id="btn-export" type="button">PNG 저장 (1080×1920)</button>
+      <div class="field">
+        <span class="label">내 스타일 (딤 + 고른 글자의 스타일)</span>
+        <div class="row-input">
+          <input type="text" id="preset-name" placeholder="예: 하단 노랑 딤2겹" maxlength="20">
+          <button class="pill" id="btn-preset-save" type="button">저장</button>
+        </div>
+        <div class="presets" id="presets"></div>
+      </div>
+      <div class="field">
+        <span class="label">내 색 (최대 4개)</span>
+        <div class="row-input">
+          <input type="color" id="mycolor" value="#ff9ad5">
+          <button class="pill" id="btn-mycolor" type="button">색 추가</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabbar" id="tabbar">
+  <button data-tab="bg">배경</button>
+  <button data-tab="dim">딤</button>
+  <button data-tab="text">글자</button>
+  <button data-tab="save">저장</button>
+</nav>
+
+<div class="out" id="out" hidden>
+  <div class="out-card">
+    <img id="out-img" alt="완성된 썸네일">
+    <p>이미지를 길게 눌러 <b>사진에 저장</b>하세요.</p>
+    <a class="pill" id="out-dl" download>파일로 받기</a>
+    <button class="pill primary" id="out-close" type="button">닫기</button>
+  </div>
+</div>
+
+<script src="render.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
